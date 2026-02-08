@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quality Role Play Log Generator</title>
+
+  <style>
+    /* ========= THEME TOKENS ========= */
+    :root{
+      --radius:16px;
+
+      /* Brand (QRP vibe) */
+      --brand1:#7c5cff; /* purple */
+      --brand2:#4fd1c5; /* teal */
+      --brand3:#60a5fa; /* blue */
+
+      /* Dark theme defaults */
+      --bg: #0b1020;
+      --bg2:#070b18;
+      --card:#0f1733;
+      --text:#e8ecff;
+      --muted:#9aa4bf;
+      --line:#1f2a52;
+
+      --btn:#0b1020;
+      --btnText:#e8ecff;
+    }
+
+    /* Light theme overrides */
+    [data-theme="light"]{
+      --bg:#f6f7fb;
+      --bg2:#ffffff;
+      --card:#ffffff;
+      --text:#0b1020;
+      --muted:#55607a;
+      --line:#e4e7f1;
+
+      --btn:#ffffff;
+      --btnText:#0b1020;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:
+        radial-gradient(1000px 600px at 30% -10%, color-mix(in oklab, var(--brand3) 25%, transparent), transparent),
+        radial-gradient(900px 500px at 80% 0%, color-mix(in oklab, var(--brand1) 22%, transparent), transparent),
+        var(--bg);
+      color:var(--text);
+      transition: background .2s ease, color .2s ease;
+    }
+
+    .wrap{max-width:1100px; margin:0 auto; padding:22px;}
+
+    .top{
+      display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      padding:16px 18px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, transparent), color-mix(in oklab, var(--bg) 92%, transparent));
+      border-radius:var(--radius);
+      box-shadow:0 15px 40px #00000022;
+    }
+
+    .brand{display:flex; gap:12px; align-items:center}
+    .logoWrap{
+      width:44px; height:44px; border-radius:14px;
+      display:grid; place-items:center;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, color-mix(in oklab, var(--brand1) 26%, transparent), color-mix(in oklab, var(--bg2) 90%, transparent));
+      overflow:hidden;
+    }
+    .logoWrap img{
+      width:100%; height:100%;
+      object-fit:contain;
+      padding:6px;
+      display:none; /* shown only if loaded */
+    }
+    .logoFallback{
+      width:100%; height:100%;
+      background:conic-gradient(from 180deg, var(--brand1), var(--brand2), var(--brand3), var(--brand1));
+      filter:saturate(1.05);
+    }
+
+    .brand h1{font-size:16px; margin:0; letter-spacing:.2px}
+    .brand p{margin:0; font-size:12px; color:var(--muted)}
+
+    .rightTools{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .pill{
+      padding:8px 10px; border:1px solid var(--line); border-radius:999px;
+      font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center;
+      background: color-mix(in oklab, var(--bg2) 80%, transparent);
+    }
+
+    .toggle{
+      display:flex; gap:8px; align-items:center;
+      padding:8px 10px; border:1px solid var(--line); border-radius:999px;
+      background: color-mix(in oklab, var(--bg2) 80%, transparent);
+      user-select:none;
+    }
+    .toggle label{font-size:12px; color:var(--muted); margin:0}
+    .switch{
+      width:44px; height:24px; border-radius:999px;
+      border:1px solid var(--line); background:var(--btn);
+      position:relative; cursor:pointer;
+    }
+    .knob{
+      position:absolute; top:2px; left:2px;
+      width:20px; height:20px; border-radius:50%;
+      background:linear-gradient(180deg, var(--brand3), var(--brand1));
+      transition:left .18s ease;
+    }
+    [data-theme="light"] .knob{ left:22px; }
+
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:16px; margin-top:16px;}
+    @media (max-width: 950px){ .grid{grid-template-columns: 1fr;} }
+
+    .card{
+      border:1px solid var(--line);
+      background: color-mix(in oklab, var(--card) 92%, transparent);
+      border-radius:var(--radius);
+      overflow:hidden;
+      box-shadow:0 15px 40px #00000022;
+    }
+    .cardHead{
+      padding:12px 14px; border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background:var(--btn);
+      color:var(--muted);
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:12px;
+    }
+    .tab.active{
+      color:var(--text);
+      border-color: color-mix(in oklab, var(--brand1) 55%, var(--line));
+      background:linear-gradient(180deg, color-mix(in oklab, var(--brand1) 35%, transparent), var(--btn));
+    }
+
+    .actions{display:flex; gap:8px; flex-wrap:wrap}
+    button{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background:var(--btn);
+      color:var(--btnText);
+      padding:9px 10px;
+      border-radius:12px;
+      font-size:12px;
+    }
+    button.primary{
+      border-color: color-mix(in oklab, var(--brand1) 55%, var(--line));
+      background:linear-gradient(180deg, color-mix(in oklab, var(--brand1) 55%, transparent), var(--btn));
+    }
+    button.good{
+      border-color: color-mix(in oklab, #22c55e 45%, var(--line));
+      background:linear-gradient(180deg, color-mix(in oklab, #22c55e 35%, transparent), var(--btn));
+    }
+    button.bad{
+      border-color: color-mix(in oklab, #ef4444 45%, var(--line));
+      background:linear-gradient(180deg, color-mix(in oklab, #ef4444 30%, transparent), var(--btn));
+    }
+
+    .body{padding:14px;}
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 650px){ .row{grid-template-columns:1fr;} }
+
+    label{display:block; font-size:12px; color:var(--muted); margin:0 0 6px}
+    input, textarea, select{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:var(--bg2);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:92px; resize:vertical}
+    .help{font-size:11px; color:var(--muted); margin-top:6px}
+    .hr{height:1px; background:var(--line); margin:12px 0}
+
+    .preview{
+      padding:14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+      white-space:pre-wrap;
+      border-top:1px solid var(--line);
+      background: color-mix(in oklab, var(--bg2) 92%, transparent);
+      min-height:240px;
+    }
+    .mini{font-size:11px; color:var(--muted)}
+    .toast{
+      position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+      background:var(--bg2); border:1px solid var(--line); color:var(--text);
+      padding:10px 12px; border-radius:999px; display:none;
+      box-shadow:0 20px 50px #00000033; font-size:12px;
+    }
+    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logoWrap" title="QRP Logo">
+          <!-- Put qrp-logo.png in the same folder as index.html (or change the src) -->
+          <img id="qrpLogo" src="qrp-logo.png" alt="QRP Logo" />
+          <div class="logoFallback" id="logoFallback" aria-hidden="true"></div>
+        </div>
+        <div>
+          <h1>Quality Role Play Log Generator</h1>
+          <p>Generate clean Discord logs + shareable links (no login, no storage)</p>
+        </div>
+      </div>
+
+      <div class="rightTools">
+        <div class="pill" title="Share links store data in the URL hash">
+          <span>🔗</span>
+          <span>Share links contain the filled data</span>
+        </div>
+
+        <div class="toggle" title="Toggle theme">
+          <label>Theme</label>
+          <div class="switch" id="themeSwitch" role="switch" aria-checked="false" tabindex="0">
+            <div class="knob"></div>
+          </div>
+          <div class="mini" id="themeLabel">Dark</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="formCard">
+        <div class="cardHead">
+          <div class="tabs" id="tabs"></div>
+          <div class="actions">
+            <button class="primary" id="btnGenerate">Generate</button>
+            <button class="good" id="btnCopy">Copy Discord Log</button>
+            <button class="good" id="btnLink">Copy Share Link</button>
+            <button class="bad" id="btnReset">Reset</button>
+          </div>
+        </div>
+        <div class="body" id="formBody"></div>
+        <div class="preview" id="discordOut"></div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <div style="font-weight:700;">How staff use it</div>
+            <div class="mini">Fill → Generate → Copy (or share link)</div>
+          </div>
+        </div>
+        <div class="body">
+          <div class="mini">
+            <div>✅ One public link for everyone.</div>
+            <div>✅ No accounts. No storage. Works instantly.</div>
+            <div>✅ Share link opens the page with fields pre-filled.</div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div style="font-weight:700; margin-bottom:6px;">Hosting (free)</div>
+          <div class="mini">
+            <div><b>GitHub Pages</b>: upload as <code>index.html</code> → enable Pages.</div>
+            <div><b>Netlify</b>: drag & drop a folder with <code>index.html</code>.</div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="mini">
+            If HWID/Identifier lists are huge, share links can get long. If you hit that issue, tell me and I’ll switch it to short-links.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/** ========= THEME (REMEMBERS STAFF CHOICE) ========= **/
+const THEME_KEY = "qrp_log_theme";
+
+function setTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  const isLight = theme === "light";
+  document.getElementById("themeLabel").textContent = isLight ? "Light" : "Dark";
+  const sw = document.getElementById("themeSwitch");
+  sw.setAttribute("aria-checked", isLight ? "true" : "false");
+}
+
+function toggleTheme(){
+  const current = document.documentElement.getAttribute("data-theme") || "dark";
+  setTheme(current === "dark" ? "light" : "dark");
+}
+
+(function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  setTheme(saved || "dark");
+
+  const sw = document.getElementById("themeSwitch");
+  sw.addEventListener("click", toggleTheme);
+  sw.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter" || e.key === " "){
+      e.preventDefault();
+      toggleTheme();
+    }
+  });
+})();
+
+/** ========= QRP LOGO AUTO-SHOW (fallback if missing) ========= **/
+(function initLogo(){
+  const img = document.getElementById("qrpLogo");
+  const fb = document.getElementById("logoFallback");
+  img.onload = ()=>{ img.style.display="block"; fb.style.display="none"; };
+  img.onerror = ()=>{ img.style.display="none"; fb.style.display="block"; };
+})();
+
+/** ========= LOG CONFIG ========= **/
+const LOGS = [
+  { id:"comp", label:"Comp Logs", emoji:"📌", title:"COMP LOG",
+    fields:[
+      {k:"cfx",  label:"CFX/txAdmin Name", type:"text", placeholder:"e.g. StaffName"},
+      {k:"ic",   label:"IC Name", type:"text", placeholder:"e.g. John Smith"},
+      {k:"dname",label:"Discord Name", type:"text", placeholder:"e.g. Name#1234"},
+      {k:"did",  label:"Discord ID", type:"text", placeholder:"18-digit ID"},
+      {k:"reason",label:"Reason for Comp", type:"textarea", placeholder:"Why was comp issued?"},
+      {k:"evidence",label:"Evidence (links)", type:"textarea", placeholder:"Paste links (one per line)"}
+    ],
+    format:(v)=>[
+      `📌 **COMP LOG**`,
+      ``,
+      `**CFX/txAdmin:** ${v.cfx||"—"}`,
+      `**IC Name:** ${v.ic||"—"}`,
+      `**Discord:** ${v.dname||"—"}`,
+      `**Discord ID:** ${v.did||"—"}`,
+      ``,
+      `**Reason:**`,
+      `${v.reason||"—"}`,
+      ``,
+      `**Evidence:**`,
+      `${v.evidence||"—"}`
+    ].join("\n")
+  },
+
+  { id:"ban", label:"Ban Logs", emoji:"🚫", title:"BAN LOG",
+    fields:[
+      {k:"cfx", label:"CFX/txAdmin Name", type:"text"},
+      {k:"ic", label:"IC Name", type:"text"},
+      {k:"dname", label:"Discord Name", type:"text"},
+      {k:"did", label:"Discord ID", type:"text"},
+      {k:"idents", label:"Current Identifiers", type:"textarea", placeholder:"One per line (steam:, license:, discord:, etc)"},
+      {k:"hwids", label:"All Hardware IDs", type:"textarea", placeholder:"One per line"},
+      {k:"length", label:"Ban Length", type:"text", placeholder:"e.g. 3 days / 24h / permanent"},
+      {k:"reason", label:"Ban Reason", type:"textarea"},
+      {k:"banid", label:"Ban ID", type:"text", placeholder:"e.g. BAN-0241"},
+      {k:"evidence", label:"Evidence (links)", type:"textarea"}
+    ],
+    format:(v)=>[
+      `🚫 **BAN LOG**`,
+      ``,
+      `**CFX/txAdmin:** ${v.cfx||"—"}`,
+      `**IC Name:** ${v.ic||"—"}`,
+      `**Discord:** ${v.dname||"—"}`,
+      `**Discord ID:** ${v.did||"—"}`,
+      ``,
+      `**Identifiers:**`,
+      `${v.idents||"—"}`,
+      ``,
+      `**HWIDs:**`,
+      `${v.hwids||"—"}`,
+      ``,
+      `**Ban Length:** ${v.length||"—"}`,
+      ``,
+      `**Ban Reason:**`,
+      `${v.reason||"—"}`,
+      ``,
+      `**Ban ID:** ${v.banid||"—"}`,
+      ``,
+      `**Evidence:**`,
+      `${v.evidence||"—"}`
+    ].join("\n")
+  },
+
+  { id:"banreq", label:"Ban Requests", emoji:"📥", title:"BAN REQUEST",
+    fields:[
+      {k:"cfx", label:"CFX/txAdmin Name", type:"text"},
+      {k:"ic", label:"IC Name", type:"text"},
+      {k:"dname", label:"Discord Name", type:"text"},
+      {k:"did", label:"Discord ID", type:"text"},
+      {k:"idents", label:"Current Identifiers", type:"textarea"},
+      {k:"hwids", label:"All Hardware IDs", type:"textarea"},
+      {k:"length", label:"Requested Ban Length", type:"text"},
+      {k:"reason", label:"Ban Reason (request)", type:"textarea"},
+      {k:"banid", label:"Ban ID (if created)", type:"text", placeholder:"Optional"},
+      {k:"evidence", label:"Evidence (links)", type:"textarea"}
+    ],
+    format:(v)=>[
+      `📥 **BAN REQUEST**`,
+      ``,
+      `**CFX/txAdmin:** ${v.cfx||"—"}`,
+      `**IC Name:** ${v.ic||"—"}`,
+      `**Discord:** ${v.dname||"—"}`,
+      `**Discord ID:** ${v.did||"—"}`,
+      ``,
+      `**Identifiers:**`,
+      `${v.idents||"—"}`,
+      ``,
+      `**HWIDs:**`,
+      `${v.hwids||"—"}`,
+      ``,
+      `**Requested Length:** ${v.length||"—"}`,
+      ``,
+      `**Reason:**`,
+      `${v.reason||"—"}`,
+      ``,
+      `**Ban ID:** ${v.banid||"—"}`,
+      ``,
+      `**Evidence:**`,
+      `${v.evidence||"—"}`
+    ].join("\n")
+  },
+
+  { id:"support", label:"Supporter Purchases", emoji:"🛒", title:"SUPPORTER PURCHASE LOG",
+    fields:[
+      {k:"dname", label:"Discord Name", type:"text"},
+      {k:"did", label:"Discord ID", type:"text"},
+      {k:"cfx", label:"CFX/txAdmin Name", type:"text"},
+      {k:"purchased", label:"Purchased", type:"text", placeholder:"e.g. Supporter pack / Height changer"},
+      {k:"proof", label:"Proof of purchase", type:"textarea", placeholder:"Links / screenshot links / transaction info"},
+      {k:"admin", label:"Admin who completed", type:"text"}
+    ],
+    format:(v)=>[
+      `🛒 **SUPPORTER PURCHASE LOG**`,
+      ``,
+      `**Discord:** ${v.dname||"—"}`,
+      `**Discord ID:** ${v.did||"—"}`,
+      `**CFX/txAdmin:** ${v.cfx||"—"}`,
+      ``,
+      `**Purchased:** ${v.purchased||"—"}`,
+      ``,
+      `**Proof:**`,
+      `${v.proof||"—"}`,
+      ``,
+      `**Completed By:** ${v.admin||"—"}`
+    ].join("\n")
+  },
+
+  { id:"pc", label:"PC Check Logs", emoji:"🖥️", title:"PC CHECK LOG",
+    fields:[
+      {k:"cfx", label:"CFX/txAdmin Name", type:"text"},
+      {k:"ic", label:"IC Name", type:"text"},
+      {k:"did", label:"Discord ID", type:"text"},
+      {k:"result", label:"Result", type:"select", options:["— Select —","Passed","Failed","Refused","Incomplete"]},
+      {k:"evidence", label:"Evidence (links)", type:"textarea"}
+    ],
+    format:(v)=>[
+      `🖥️ **PC CHECK LOG**`,
+      ``,
+      `**CFX/txAdmin:** ${v.cfx||"—"}`,
+      `**IC Name:** ${v.ic||"—"}`,
+      `**Discord ID:** ${v.did||"—"}`,
+      `**Result:** ${(!v.result || v.result==="— Select —") ? "—" : v.result}`,
+      ``,
+      `**Evidence:**`,
+      `${v.evidence||"—"}`
+    ].join("\n")
+  },
+
+  { id:"perm", label:"Don’t Unban / Perm Ban", emoji:"⛔", title:"DO NOT UNBAN / PERM BAN",
+    fields:[
+      {k:"dname", label:"Discord Name", type:"text"},
+      {k:"cfx", label:"CFX/txAdmin Name", type:"text"},
+      {k:"did", label:"Discord ID", type:"text"},
+      {k:"why", label:"Evidence / Why perm banned", type:"textarea"}
+    ],
+    format:(v)=>[
+      `⛔ **DO NOT UNBAN / PERM BAN**`,
+      ``,
+      `**Discord:** ${v.dname||"—"}`,
+      `**Discord ID:** ${v.did||"—"}`,
+      `**CFX/txAdmin:** ${v.cfx||"—"}`,
+      ``,
+      `**Why / Evidence:**`,
+      `${v.why||"—"}`
+    ].join("\n")
+  },
+
+  { id:"watch", label:"Cheater Watchlist", emoji:"👀", title:"CHEATER WATCHLIST",
+    fields:[
+      {k:"dname", label:"Discord Name", type:"text"},
+      {k:"did", label:"Discord ID", type:"text"},
+      {k:"reason", label:"Reason", type:"textarea"}
+    ],
+    format:(v)=>[
+      `👀 **CHEATER WATCHLIST**`,
+      ``,
+      `**Discord:** ${v.dname||"—"}`,
+      `**Discord ID:** ${v.did||"—"}`,
+      ``,
+      `**Reason:**`,
+      `${v.reason||"—"}`
+    ].join("\n")
+  }
+];
+
+const LOGS_BY_ID = Object.fromEntries(LOGS.map(l=>[l.id,l]));
+
+/** ========= STATE ========= **/
+let active = LOGS[0].id;
+let valuesByLog = Object.fromEntries(LOGS.map(l=>[l.id, {}]));
+
+/** ========= UI ========= **/
+const tabsEl = document.getElementById("tabs");
+const formBody = document.getElementById("formBody");
+const outEl = document.getElementById("discordOut");
+const toastEl = document.getElementById("toast");
+
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.style.display = "block";
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=> toastEl.style.display="none", 1800);
+}
+
+function escapeDiscordCodeblock(s){
+  return (s||"").replace(/```/g, "``\u200b`");
+}
+function discordBlock(text){
+  return "```md\n" + escapeDiscordCodeblock(text) + "\n```";
+}
+
+function renderTabs(){
+  tabsEl.innerHTML = "";
+  for(const log of LOGS){
+    const b = document.createElement("div");
+    b.className = "tab" + (log.id===active ? " active" : "");
+    b.textContent = `${log.emoji} ${log.label}`;
+    b.onclick = ()=>{ active = log.id; renderAll(); };
+    tabsEl.appendChild(b);
+  }
+}
+
+function renderForm(){
+  const log = LOGS_BY_ID[active];
+  const v = valuesByLog[active] || {};
+  formBody.innerHTML = "";
+
+  const rows = [];
+  let currentRow = document.createElement("div");
+  currentRow.className = "row";
+  let colCount = 0;
+
+  function pushRow(force=false){
+    if(force || colCount===2){
+      rows.push(currentRow);
+      currentRow = document.createElement("div");
+      currentRow.className="row";
+      colCount=0;
+    }
+  }
+
+  for(const f of log.fields){
+    const wrap = document.createElement("div");
+
+    const lab = document.createElement("label");
+    lab.textContent = f.label;
+    wrap.appendChild(lab);
+
+    let input;
+    if(f.type==="textarea"){
+      input = document.createElement("textarea");
+      input.placeholder = f.placeholder || "";
+      input.value = v[f.k] || "";
+    } else if(f.type==="select"){
+      input = document.createElement("select");
+      for(const opt of (f.options||[])){
+        const o = document.createElement("option");
+        o.value = opt;
+        o.textContent = opt;
+        input.appendChild(o);
+      }
+      input.value = v[f.k] || (f.options?.[0] ?? "");
+    } else {
+      input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = f.placeholder || "";
+      input.value = v[f.k] || "";
+    }
+
+    input.oninput = ()=>{
+      valuesByLog[active][f.k] = input.value;
+      renderOutput();
+    };
+
+    wrap.appendChild(input);
+
+    if(["idents","hwids","evidence","proof"].includes(f.k)){
+      const h = document.createElement("div");
+      h.className="help";
+      h.textContent = "Tip: one per line.";
+      wrap.appendChild(h);
+    }
+
+    currentRow.appendChild(wrap);
+    colCount++;
+
+    if(f.type==="textarea") pushRow(true);
+    else if(colCount===2) pushRow();
+  }
+
+  if(currentRow.childNodes.length) rows.push(currentRow);
+  for(const r of rows) formBody.appendChild(r);
+}
+
+function renderOutput(){
+  const log = LOGS_BY_ID[active];
+  const v = valuesByLog[active] || {};
+  outEl.textContent = discordBlock(log.format(v));
+}
+
+function renderAll(){
+  renderTabs();
+  renderForm();
+  renderOutput();
+}
+
+/** ========= SHARE LINKS (NO STORAGE) ========= **/
+function encodeState(){
+  const payload = { a: active, v: valuesByLog[active] || {} };
+  const json = JSON.stringify(payload);
+  const b64 = btoa(unescape(encodeURIComponent(json)))
+    .replaceAll("+","-").replaceAll("/","_").replaceAll("=","");
+  return b64;
+}
+function decodeState(hash){
+  try{
+    const b64 = hash.replaceAll("-","+").replaceAll("_","/");
+    const pad = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
+    const json = decodeURIComponent(escape(atob(b64 + pad)));
+    const payload = JSON.parse(json);
+    if(payload?.a && LOGS_BY_ID[payload.a]){
+      active = payload.a;
+      valuesByLog[active] = payload.v || {};
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+function copyToClipboard(text){
+  return navigator.clipboard.writeText(text);
+}
+
+/** ========= BUTTONS ========= **/
+document.getElementById("btnGenerate").onclick = ()=>{
+  renderOutput();
+  toast("Generated!");
+};
+
+document.getElementById("btnCopy").onclick = async ()=>{
+  try{
+    await copyToClipboard(outEl.textContent);
+    toast("Copied Discord log!");
+  }catch(e){
+    toast("Copy failed (browser permissions).");
+  }
+};
+
+document.getElementById("btnLink").onclick = async ()=>{
+  try{
+    const encoded = encodeState();
+    const link = location.origin + location.pathname + "#" + encoded;
+    await copyToClipboard(link);
+    toast("Copied share link!");
+  }catch(e){
+    toast("Copy failed (browser permissions).");
+  }
+};
+
+document.getElementById("btnReset").onclick = ()=>{
+  valuesByLog[active] = {};
+  renderAll();
+  toast("Reset.");
+};
+
+/** ========= INIT ========= **/
+(function init(){
+  if(location.hash && location.hash.length > 2){
+    const ok = decodeState(location.hash.slice(1));
+    if(ok) toast("Loaded log from link.");
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>
